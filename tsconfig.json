@@ -1,0 +1,20 @@
+{
+    "compilerOptions": {
+        "target": "es5",
+        "module": "commonjs",
+        "isolatedModules": false,
+        "jsx": "react",
+        "declaration": false,
+        "removeComments": true,
+        "noLib": false,
+        "lib": ["dom", "es2020"],
+        "preserveConstEnums": true,
+        "skipLibCheck": true,
+        "outDir": "./build/js/",
+        "esModuleInterop": true,
+        "sourceMap": true
+    },
+    "include": ["src/**/*.ts", "src/**/*.tsx"],
+    "exclude": ["node_modules", "**/*.test.ts"],
+    "buildOnSave": true
+}
