@@ -1,5 +1,7 @@
 import React, { useState } from "react";
 import { makeStyles } from '@material-ui/core/styles';
+import CurveTrack from './curve';
+import StraightTrack from './straight';
 
 const useStyles = makeStyles((theme) => ({
     root: {
@@ -9,6 +11,7 @@ const useStyles = makeStyles((theme) => ({
 }))
 
 interface Drag {
+    startA: number
     startX: number
     startY: number
     adjustX: number
@@ -17,8 +20,9 @@ interface Drag {
 
 export default () => {
     const classes = useStyles()
-    const [cx, setCx] = React.useState(0)
-    const [cy, setCy] = React.useState(0)
+    const [a, setA] = React.useState(0)
+    const [x, setX] = React.useState(0)
+    const [y, setY] = React.useState(0)
     const [drag, setDrag] = React.useState(null as Drag)
     const svgRef: React.MutableRefObject<SVGSVGElement> = React.useRef()
 
@@ -32,34 +36,41 @@ export default () => {
 
     const onMouseDown = (ev: React.MouseEvent) => {
         const svgPt = toSvgPoint(ev);
-        const adjustX = cx - svgPt.x;
-        const adjustY = cy - svgPt.y;
-        setDrag({ startX: cx, startY: cy, adjustX, adjustY });
+        const adjustX = x - svgPt.x;
+        const adjustY = y - svgPt.y;
+        setDrag({ startA: a, startX: x, startY: y, adjustX, adjustY });
     }
 
     const onMouseMove = (ev: React.MouseEvent) => {
         if (drag) {
             ev.preventDefault();
             const svgPt = toSvgPoint(ev);
-            setCx(drag.adjustX + svgPt.x);
-            setCy(drag.adjustY + svgPt.y);
+            setX(drag.adjustX + svgPt.x);
+            setY(drag.adjustY + svgPt.y);
         }
     }
+
     const onMouseUp = (ev: React.MouseEvent) => {
         if (drag) {
             ev.preventDefault();
             const svgPt = toSvgPoint(ev);
-            setCx(drag.adjustX + svgPt.x);
-            setCy(drag.adjustY + svgPt.y);
+            setX(drag.adjustX + svgPt.x);
+            setY(drag.adjustY + svgPt.y);
             setDrag(null);
         }
     }
+
     const onKeyDown = (ev: React.KeyboardEvent) => {
         if (ev.key === 'Escape' && drag) {
             ev.preventDefault();
-            setCx(drag.startX);
-            setCy(drag.startY);
+            setA(drag.startA);
+            setX(drag.startX);
+            setY(drag.startY);
             setDrag(null);
+        }
+        if (ev.key === 'r' && drag) {
+            ev.preventDefault();
+            setA(a + 7.5);
         }
     }
 
@@ -72,11 +83,16 @@ export default () => {
             onMouseUp={onMouseUp}
             onMouseMove={onMouseMove}
             onKeyDown={onKeyDown}>
-            <circle
-                cx={0}
-                cy={0}
-                r="10"
-                transform={`translate(${cx}, ${cy})`}
+            <CurveTrack
+                curveAngle={-15}
+                curveRadius={120}
+                trackWidth={4.5}
+                transform={`translate(${x}, ${y}) rotate(${a})`}
+                onMouseDown={onMouseDown} />
+            <StraightTrack
+                length={30}
+                trackWidth={4.5}
+                transform={`translate(15, 0)`}
                 onMouseDown={onMouseDown} />
         </svg>
     );
