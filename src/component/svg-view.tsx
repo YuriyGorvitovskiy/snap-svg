@@ -84,15 +84,15 @@ export default () => {
             onMouseMove={onMouseMove}
             onKeyDown={onKeyDown}>
             <CurveTrack
-                curveAngle={-15}
+                curveAngle={22.5}
                 curveRadius={120}
-                trackWidth={4.5}
+                trackWidth={9}
                 transform={`translate(${x}, ${y}) rotate(${a})`}
                 onMouseDown={onMouseDown} />
             <StraightTrack
-                length={30}
-                trackWidth={4.5}
-                transform={`translate(15, 0)`}
+                length={48}
+                trackWidth={9}
+                transform={`translate(-24, 0)`}
                 onMouseDown={onMouseDown} />
         </svg>
     );
