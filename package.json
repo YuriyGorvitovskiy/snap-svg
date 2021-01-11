@@ -41,7 +41,7 @@
         "upgrade-dep": "ncu -u && npm install --shrinkwrap",
         "compile": "tsc",
         "format": "prettier --write \"src/**/*.ts\" \"src/**/*.tsx\" .prettierrc jest.config.js package.json tsconfig.json .eslintrc",
-        "lint": "eslint 'src/**/*.{js,ts,tsx}'",
+        "lint": "eslint 'src/**/*.{js,ts,tsx}' --fix",
         "test": "jest --coverage",
         "test:watch": "npm run test -- --watch",
         "webpack": "webpack",

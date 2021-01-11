@@ -6,4 +6,4 @@ module.exports = {
     moduleFileExtensions: ["ts", "tsx", "js", "jsx", "json", "node"],
     coverageDirectory: "build/coverage",
     setupFilesAfterEnv: ["./src/enzyme-setup.ts"],
-};
+}

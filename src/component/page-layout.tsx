@@ -1,12 +1,12 @@
-import React from "react";
+import React, { FunctionComponent } from "react"
 
-import Grid from "@material-ui/core/Grid";
+import Grid from "@material-ui/core/Grid"
 
-import { makeStyles } from '@material-ui/core/styles';
+import { makeStyles } from "@material-ui/core/styles"
 
-import SvgView from "./svg-view";
+import SvgView from "./svg-view"
 
-const useStyles = makeStyles((theme) => ({
+const useStyles = makeStyles(() => ({
     root: {
         flexDirection: "column",
         height: "100%",
@@ -20,19 +20,21 @@ const useStyles = makeStyles((theme) => ({
         height: "100%",
         minWidth: 0,
     },
-}));
+}))
 
-export default () => {
-    const classes = useStyles();
+const PageLayout: FunctionComponent<unknown> = () => {
+    const classes = useStyles()
 
     return (
         <Grid container className={classes.root}>
             <Grid item>
-                <h1>Hello, Webpack!</h1>
+                <h1>Hello, SVG!</h1>
             </Grid>
             <Grid item className={classes.main}>
                 <SvgView />
             </Grid>
         </Grid>
-    );
+    )
 }
+
+export default PageLayout

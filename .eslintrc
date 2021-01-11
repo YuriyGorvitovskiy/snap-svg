@@ -14,10 +14,7 @@
             "jsx": true // Allows for the parsing of JSX
         }
     },
-    "eslint.options": {
-        "ignorePattern": "webpack.config.js",
-    },
-    "plugins": ["@typescript-eslint", "react"],
+    "plugins": ["@typescript-eslint", "react", "prettier"],
     "root": true,
     "rules": {},
     "settings": {

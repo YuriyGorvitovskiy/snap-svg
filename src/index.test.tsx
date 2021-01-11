@@ -1,10 +1,10 @@
 test("empty", () => {
     // Setup
-    const a = 1;
+    const a = 1
 
     // Execute
-    const b = a + 1;
+    const b = a + 1
 
     // Verify
-    expect(b).toBe(2);
-});
+    expect(b).toBe(2)
+})
