@@ -1,19 +1,21 @@
 import * as P from "../geometry/path"
 import { Color, Degree, Metre, Point } from "../geometry/type"
-import Connection from "./connection"
+import * as C from "./connection"
 
 export interface Model {
     centerLine: P.Path
     centerPoint: Point
     color: Color
-    connections: Connection[]
+    interface: C.Location[]
     outline: P.Path
 }
 
-export interface Instance {
+export interface Item {
     model: Model
     position: Point
     rotation: Degree
+    connections: C.Connection[]
+    matrix: DOMMatrixReadOnly
 }
 
 export const straight = (length: Metre, width: Metre, color: Color): Model => {
@@ -21,13 +23,13 @@ export const straight = (length: Metre, width: Metre, color: Color): Model => {
         centerLine: [P.moveTo({ x: -length / 2, y: 0 }), P.lineTo({ x: length / 2, y: 0 })],
         centerPoint: { x: 0, y: 0 },
         color,
-        connections: [
+        interface: [
             {
                 position: { x: -length / 2, y: 0 },
                 direction: 180,
             },
             {
-                position: { x: -length / 2, y: 0 },
+                position: { x: length / 2, y: 0 },
                 direction: 0,
             },
         ],
@@ -60,14 +62,14 @@ export const curve = (radius: Metre, angle: Degree, width: Metre, color: Color):
             y: (Math.cos(radians / 2) - 1) * radius,
         },
         color,
-        connections: [
+        interface: [
             {
                 position: begin,
-                direction: 0,
+                direction: 180,
             },
             {
                 position: end,
-                direction: angle,
+                direction: -angle,
             },
         ],
         outline: [
@@ -87,4 +89,33 @@ export const curve = (radius: Metre, angle: Degree, width: Metre, color: Color):
             P.close(),
         ],
     }
+}
+
+export const place = (model: Model, position: Point, rotation: Degree): Item => {
+    const matrix = new DOMMatrixReadOnly()
+        .translate(position.x, position.y)
+        .rotate(0, 0, rotation)
+        .translate(-model.centerPoint.x, -model.centerPoint.y)
+
+    return {
+        model,
+        position,
+        rotation,
+        connections: model.interface.map((i) => ({
+            location: {
+                position: matrix.transformPoint(i.position),
+                direction: (rotation + i.direction) % 360,
+            },
+            info: null,
+        })),
+        matrix,
+    }
+}
+
+export const move = (item: Item, position: Point, rotation: Degree): Item => {
+    const moved = place(item.model, position, rotation)
+    moved.connections.forEach((c, i) => {
+        c.info = item.connections[i].info
+    })
+    return moved
 }

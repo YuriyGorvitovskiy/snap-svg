@@ -1,6 +1,16 @@
-import { Degree, Point } from "../geometry/type"
+import * as G from "../geometry/type"
 
-export default interface Connection {
-    position: Point
-    direction: Degree
+export interface Location {
+    position: G.Point
+    direction: G.Degree
+}
+
+export interface Info {
+    item: string
+    number: number
+}
+
+export interface Connection {
+    location: Location
+    info: Info
 }

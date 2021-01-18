@@ -1,7 +1,9 @@
 import React from "react"
 import { makeStyles } from "@material-ui/core/styles"
 import TrackComponent from "./track"
-import * as TrackModel from "../model/track"
+import * as T from "../model/track"
+import * as C from "../model/connection"
+import * as L from "../model/layout"
 
 const useStyles = makeStyles(() => ({
     root: {
@@ -11,6 +13,7 @@ const useStyles = makeStyles(() => ({
 }))
 
 interface Drag {
+    itemId: string
     startA: number
     startX: number
     startY: number
@@ -18,40 +21,52 @@ interface Drag {
     adjustY: number
 }
 
-interface Snap {
-    x: number
-    y: number
-    a: number
-}
-
-const snaps: Snap[] = [
-    { x: -48, y: 0, a: 0 },
-    { x: 0, y: 0, a: 180 },
-    { x: -30 - 24 * Math.cos((Math.PI * 30) / 180), y: 30 + 24 * Math.sin((Math.PI * 30) / 180), a: -30 },
-    { x: -30 + 24 * Math.cos((Math.PI * 30) / 180), y: 30 - 24 * Math.sin((Math.PI * 30) / 180), a: 150 },
-]
 const maxSnapDistSq = 5 * 5
 
-const snap = (pos: Snap): Snap => {
-    return snaps.reduce(
-        (a, s) => {
-            const dx = s.x - pos.x
-            const dy = s.y - pos.y
-            const d = dx * dx + dy * dy
-            return d < a.d ? { d, p: { ...s, a: (180 + s.a) % 360 } } : a
-        },
-        { d: maxSnapDistSq, p: pos }
+const snap = (layout: L.Layout, id: string, item: T.Item): C.Location => {
+    return L.connections(layout, ([i]) => id !== i).reduce(
+        (a, c) =>
+            item.connections.reduce((ia, ic, ix) => {
+                const dx = c.location.position.x - ic.location.position.x
+                const dy = c.location.position.y - ic.location.position.y
+                const d = dx * dx + dy * dy
+                return d < ia.d
+                    ? {
+                          d,
+                          p: {
+                              position: new DOMMatrixReadOnly()
+                                  .translate(c.location.position.x, c.location.position.y)
+                                  .rotate(0, 0, (180 + c.location.direction - item.model.interface[ix].direction) % 360)
+                                  .translate(-item.model.interface[ix].position.x, -item.model.interface[ix].position.y)
+                                  .transformPoint(item.model.centerPoint),
+                              direction: (180 + c.location.direction - item.model.interface[ix].direction) % 360,
+                          },
+                      }
+                    : ia
+            }, a),
+        { d: maxSnapDistSq, p: { position: item.position, direction: item.rotation } }
     ).p
 }
 
-const straiht_480 = TrackModel.straight(48, 9, "orange")
-const curve_1240_225 = TrackModel.curve(120, 22.5, 9, "#1F45FC")
+const model = {
+    straiht_480: T.straight(48, 9, "orange"),
+    curve_1240_225: T.curve(120, 22.5, 9, "#1F45FC"),
+}
+
+const initialLayout: L.Layout = {
+    model,
+    items: {
+        s1: T.place(model.straiht_480, { x: -24, y: -20 }, 0),
+        s2: T.place(model.straiht_480, { x: -30, y: 30 }, -30),
+        r1: T.place(model.curve_1240_225, { x: 0, y: 0 }, 0),
+        r2: T.place(model.curve_1240_225, { x: 30, y: 30 }, 0),
+    },
+}
 
 const SVGComponent: React.FunctionComponent<unknown> = () => {
     const classes = useStyles()
-    const [a, setA] = React.useState(0)
-    const [x, setX] = React.useState(0)
-    const [y, setY] = React.useState(0)
+
+    const [layout, setLayout] = React.useState(initialLayout)
     const [drag, setDrag] = React.useState(null as Drag)
 
     const svgRef: React.MutableRefObject<SVGSVGElement> = React.useRef()
@@ -61,14 +76,15 @@ const SVGComponent: React.FunctionComponent<unknown> = () => {
         const htmlPt = svg.createSVGPoint()
         htmlPt.x = ev.clientX
         htmlPt.y = ev.clientY
-        return htmlPt.matrixTransform(svg.getScreenCTM().inverse())
+        return htmlPt.matrixTransform(svg.getScreenCTM().flipY().inverse())
     }
 
-    const onMouseDown = (ev: React.MouseEvent) => {
+    const onMouseDown = (itemId: string, ev: React.MouseEvent) => {
         const svgPt = toSvgPoint(ev)
-        const adjustX = x - svgPt.x
-        const adjustY = y - svgPt.y
-        setDrag({ startA: a, startX: x, startY: y, adjustX, adjustY })
+        const item = layout.items[itemId]
+        const adjustX = item.position.x - svgPt.x
+        const adjustY = item.position.y - svgPt.y
+        setDrag({ itemId, startA: item.rotation, startX: item.position.x, startY: item.position.y, adjustX, adjustY })
     }
 
     const onMouseMove = (ev: React.MouseEvent) => {
@@ -77,10 +93,16 @@ const SVGComponent: React.FunctionComponent<unknown> = () => {
             const svgPt = toSvgPoint(ev)
             svgPt.x += drag.adjustX
             svgPt.y += drag.adjustY
-            const snapPt = snap({ x: svgPt.x, y: svgPt.y, a })
-            setA(snapPt.a)
-            setX(snapPt.x)
-            setY(snapPt.y)
+
+            let item = layout.items[drag.itemId]
+            item = T.move(item, { x: svgPt.x, y: svgPt.y }, item.rotation)
+
+            const snapPt = snap(layout, drag.itemId, item)
+            item = T.move(item, snapPt.position, snapPt.direction)
+
+            const modified = { ...layout }
+            modified.items[drag.itemId] = item
+            setLayout(modified)
         }
     }
 
@@ -90,10 +112,16 @@ const SVGComponent: React.FunctionComponent<unknown> = () => {
             const svgPt = toSvgPoint(ev)
             svgPt.x += drag.adjustX
             svgPt.y += drag.adjustY
-            const snapPt = snap({ x: svgPt.x, y: svgPt.y, a })
-            setA(snapPt.a)
-            setX(snapPt.x)
-            setY(snapPt.y)
+
+            let item = layout.items[drag.itemId]
+            item = T.move(item, { x: svgPt.x, y: svgPt.y }, item.rotation)
+
+            const snapPt = snap(layout, drag.itemId, item)
+            item = T.move(item, snapPt.position, snapPt.direction)
+
+            const modified = { ...layout }
+            modified.items[drag.itemId] = item
+            setLayout(modified)
             setDrag(null)
         }
     }
@@ -101,14 +129,18 @@ const SVGComponent: React.FunctionComponent<unknown> = () => {
     const onKeyDown = (ev: React.KeyboardEvent) => {
         if (ev.key === "Escape" && drag) {
             ev.preventDefault()
-            setA(drag.startA)
-            setX(drag.startX)
-            setY(drag.startY)
+            const item = layout.items[drag.itemId]
+            const modified = { ...layout }
+            modified.items[drag.itemId] = T.move(item, { x: drag.startX, y: drag.startY }, drag.startA)
+            setLayout(modified)
             setDrag(null)
         }
         if (ev.key === "r" && drag) {
             ev.preventDefault()
-            setA(a + 7.5)
+            const item = layout.items[drag.itemId]
+            const modified = { ...layout }
+            modified.items[drag.itemId] = T.move(item, item.position, item.rotation + 7.5)
+            setLayout(modified)
         }
     }
 
@@ -122,30 +154,11 @@ const SVGComponent: React.FunctionComponent<unknown> = () => {
             onMouseMove={onMouseMove}
             onKeyDown={onKeyDown}
         >
-            <TrackComponent
-                track={{
-                    model: straiht_480,
-                    position: { x: -24, y: 0 },
-                    rotation: 0,
-                }}
-                onMouseDown={() => null}
-            />
-            <TrackComponent
-                track={{
-                    model: straiht_480,
-                    position: { x: -30, y: 30 },
-                    rotation: -30,
-                }}
-                onMouseDown={() => null}
-            />
-            <TrackComponent
-                track={{
-                    model: curve_1240_225,
-                    position: { x, y },
-                    rotation: a,
-                }}
-                onMouseDown={onMouseDown}
-            />
+            <g transform="scale(1, -1)">
+                {Object.entries(layout.items).map(([k, i]) => (
+                    <TrackComponent key={k} track={i} onMouseDown={(e) => onMouseDown(k, e)} />
+                ))}
+            </g>
         </svg>
     )
 }
