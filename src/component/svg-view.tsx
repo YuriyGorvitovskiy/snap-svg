@@ -103,6 +103,12 @@ const SVGComponent: React.FunctionComponent<unknown> = () => {
             const modified = { ...layout }
             modified.items[drag.itemId] = item
             setLayout(modified)
+
+            /*
+            const adjustX = item.position.x - svgPt.x + drag.adjustX
+            const adjustY = item.position.y - svgPt.y + drag.adjustY
+            setDrag({ ...drag, adjustX, adjustY })
+            */
         }
     }
 
