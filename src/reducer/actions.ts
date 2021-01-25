@@ -3,28 +3,38 @@ import { Placement } from "../data/geometry/type"
 
 export interface AddTrack {
     type: "AddTrack"
-    id: string
-    placement: Placement
+    payload: {
+        id: string
+        modelId: string
+        placement: Placement
+    }
 }
 
-export const addTrack = (placement: Placement): AddTrack => {
+export const addTrack = (modelId: string, placement: Placement): AddTrack => {
     return {
         type: "AddTrack",
-        id: nanoid(),
-        placement,
+        payload: {
+            id: nanoid(),
+            modelId,
+            placement,
+        },
     }
 }
 
 export interface MoveTrack {
     type: "MoveTrack"
-    id: string
-    placement: Placement
+    payload: {
+        id: string
+        placement: Placement
+    }
 }
 
 export const moveTrack = (id: string, placement: Placement): MoveTrack => {
     return {
         type: "MoveTrack",
-        id,
-        placement,
+        payload: {
+            id,
+            placement,
+        },
     }
 }
