@@ -1,5 +1,5 @@
 import React, { FunctionComponent } from "react"
-import * as Path from "../geometry/path"
+import * as Path from "../data/geometry/path"
 import * as Track from "../model/track"
 
 interface Props {

@@ -1,8 +1,9 @@
-import * as P from "../geometry/path"
-import { Color, Degree, Metre, Point } from "../geometry/type"
+import * as P from "../data/geometry/path"
+import { Color, Degree, Metre, Point } from "../data/geometry/type"
 import * as C from "./connection"
 
 export interface Model {
+    id: string
     centerLine: P.Path
     centerPoint: Point
     color: Color
@@ -11,6 +12,7 @@ export interface Model {
 }
 
 export interface Item {
+    id: string
     model: Model
     position: Point
     rotation: Degree
@@ -18,8 +20,9 @@ export interface Item {
     matrix: DOMMatrixReadOnly
 }
 
-export const straight = (length: Metre, width: Metre, color: Color): Model => {
+export const straight = (id: string, length: Metre, width: Metre, color: Color): Model => {
     return {
+        id,
         centerLine: [P.moveTo({ x: -length / 2, y: 0 }), P.lineTo({ x: length / 2, y: 0 })],
         centerPoint: { x: 0, y: 0 },
         color,
@@ -43,7 +46,7 @@ export const straight = (length: Metre, width: Metre, color: Color): Model => {
     }
 }
 
-export const curve = (radius: Metre, angle: Degree, width: Metre, color: Color): Model => {
+export const curve = (id: string, radius: Metre, angle: Degree, width: Metre, color: Color): Model => {
     const radians = (Math.PI * angle) / 180
     const begin = {
         x: 0,
@@ -56,6 +59,7 @@ export const curve = (radius: Metre, angle: Degree, width: Metre, color: Color):
     }
 
     return {
+        id,
         centerLine: [P.moveTo(begin), P.arcTo(radius, angle < 0, end)],
         centerPoint: {
             x: Math.sin(radians / 2) * radius,
@@ -91,13 +95,14 @@ export const curve = (radius: Metre, angle: Degree, width: Metre, color: Color):
     }
 }
 
-export const place = (model: Model, position: Point, rotation: Degree): Item => {
+export const place = (id: string, model: Model, position: Point, rotation: Degree): Item => {
     const matrix = new DOMMatrixReadOnly()
         .translate(position.x, position.y)
         .rotate(0, 0, rotation)
         .translate(-model.centerPoint.x, -model.centerPoint.y)
 
     return {
+        id,
         model,
         position,
         rotation,
@@ -113,7 +118,7 @@ export const place = (model: Model, position: Point, rotation: Degree): Item => 
 }
 
 export const move = (item: Item, position: Point, rotation: Degree): Item => {
-    const moved = place(item.model, position, rotation)
+    const moved = place(item.id, item.model, position, rotation)
     moved.connections.forEach((c, i) => {
         c.info = item.connections[i].info
     })

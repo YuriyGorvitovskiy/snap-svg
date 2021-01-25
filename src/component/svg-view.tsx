@@ -49,17 +49,17 @@ const snap = (layout: L.Layout, id: string, item: T.Item): C.Location => {
 }
 
 const model = {
-    straiht_480: T.straight(48, 9, "orange"),
-    curve_1240_225: T.curve(120, 22.5, 9, "#1F45FC"),
+    straiht_480: T.straight("S480", 48, 9, "orange"),
+    curve_1240_225: T.curve("R5", 120, 22.5, 9, "#1F45FC"),
 }
 
 const initialLayout: L.Layout = {
     model,
     items: {
-        s1: T.place(model.straiht_480, { x: -24, y: -20 }, 0),
-        s2: T.place(model.straiht_480, { x: -30, y: 30 }, -30),
-        r1: T.place(model.curve_1240_225, { x: 0, y: 0 }, 0),
-        r2: T.place(model.curve_1240_225, { x: 30, y: 30 }, 0),
+        s1: T.place("s1", model.straiht_480, { x: -24, y: -20 }, 0),
+        s2: T.place("s2", model.straiht_480, { x: -30, y: 30 }, -30),
+        r1: T.place("r1", model.curve_1240_225, { x: 0, y: 0 }, 0),
+        r2: T.place("r2", model.curve_1240_225, { x: 30, y: 30 }, 0),
     },
 }
 

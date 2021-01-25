@@ -1,4 +1,4 @@
-import * as G from "../geometry/type"
+import * as G from "../data/geometry/type"
 
 export interface Location {
     position: G.Point

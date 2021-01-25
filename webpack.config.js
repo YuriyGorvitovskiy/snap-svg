@@ -1,20 +1,20 @@
-const CopyPlugin = require("copy-webpack-plugin");
-const path = require('path');
+const CopyPlugin = require("copy-webpack-plugin")
+const path = require("path")
 
-const destDir = '/build/web/';
+const destDir = "build/web/"
 module.exports = {
     mode: "development",
     target: "web",
     entry: "./src/index.tsx",
-    devtool: 'source-map',
+    devtool: "source-map",
     output: {
         filename: "snap-svg-bundle.js",
-        path: __dirname + destDir
+        path: __dirname + destDir,
     },
 
     resolve: {
         // Add '.ts' and '.tsx' as resolvable extensions.
-        extensions: [".ts", ".tsx", ".js", ".json"]
+        extensions: [".ts", ".tsx", ".js", ".json"],
     },
 
     module: {
@@ -22,16 +22,16 @@ module.exports = {
             // All files with a '.ts' and '.tsx' extensions will be handled by 'ts-loader'.
             {
                 test: /\.(ts|tsx)$/,
-                use: 'ts-loader',
-                exclude: /node_modules/
-            }
-        ]
+                use: "ts-loader",
+                exclude: /node_modules/,
+            },
+        ],
     },
 
     devServer: {
         contentBase: path.join(__dirname, destDir),
         compress: true,
-        port: 9999
+        port: 9999,
     },
 
     // When importing a module whose path matches one of the following, just
@@ -43,9 +43,7 @@ module.exports = {
 
     plugins: [
         new CopyPlugin({
-          patterns: [
-            { from: "src/*.html", to: destDir },
-          ],
+            patterns: [{ from: "src/*.html", to: destDir }],
         }),
-      ]
-};
+    ],
+}

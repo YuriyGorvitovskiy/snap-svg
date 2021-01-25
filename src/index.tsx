@@ -1,15 +1,12 @@
 import React from "react"
 import ReactDOM from "react-dom"
 import * as ReactRedux from "react-redux"
-import * as Redux from "redux"
 
 import { ThemeProvider } from "@material-ui/core/styles"
 import Layout from "./component/page-layout"
 import theme from "./style/theme"
 
-import rootReducer from "./reducer/root"
-
-const store = Redux.createStore(rootReducer)
+import { store } from "./reducer/root"
 
 const App = () => (
     <ReactRedux.Provider store={store}>
