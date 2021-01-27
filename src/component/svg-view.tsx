@@ -1,9 +1,9 @@
-import React from "react"
 import { makeStyles } from "@material-ui/core/styles"
-import TrackComponent from "./track"
-import * as T from "../model/track"
+import React from "react"
 import * as C from "../model/connection"
 import * as L from "../model/layout"
+import * as T from "../model/track"
+import TrackComponent from "./track"
 
 const useStyles = makeStyles(() => ({
     root: {

@@ -1,6 +1,6 @@
-import ReduxToolkit from "@reduxjs/toolkit"
+import * as ReduxToolkit from "@reduxjs/toolkit"
 import reduceReducers from "reduce-reducers"
-import Redux from "redux"
+import * as Redux from "redux"
 import featuresReducer from "./features"
 import * as Model from "./model"
 import * as Track from "./track"

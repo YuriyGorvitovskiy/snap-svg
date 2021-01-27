@@ -1,10 +1,7 @@
-import React, { FunctionComponent } from "react"
-
 import Grid from "@material-ui/core/Grid"
-
 import { makeStyles } from "@material-ui/core/styles"
-
-import SvgView from "./svg-view"
+import React, { FunctionComponent } from "react"
+import LayoutComponent from "./layout"
 
 const useStyles = makeStyles(() => ({
     root: {
@@ -31,7 +28,8 @@ const PageLayout: FunctionComponent<unknown> = () => {
                 <h1>Hello, SVG!</h1>
             </Grid>
             <Grid item className={classes.main}>
-                <SvgView />
+                {/*<SvgView />*/}
+                <LayoutComponent />
             </Grid>
         </Grid>
     )

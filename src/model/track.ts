@@ -1,5 +1,5 @@
 import * as P from "../data/geometry/path"
-import { Color, Degree, Metre, Point } from "../data/geometry/type"
+import { Color, Degree, Meter, Point } from "../data/geometry/type"
 import * as C from "./connection"
 
 export interface Model {
@@ -20,7 +20,7 @@ export interface Item {
     matrix: DOMMatrixReadOnly
 }
 
-export const straight = (id: string, length: Metre, width: Metre, color: Color): Model => {
+export const straight = (id: string, length: Meter, width: Meter, color: Color): Model => {
     return {
         id,
         centerLine: [P.moveTo({ x: -length / 2, y: 0 }), P.lineTo({ x: length / 2, y: 0 })],
@@ -46,7 +46,7 @@ export const straight = (id: string, length: Metre, width: Metre, color: Color):
     }
 }
 
-export const curve = (id: string, radius: Metre, angle: Degree, width: Metre, color: Color): Model => {
+export const curve = (id: string, radius: Meter, angle: Degree, width: Meter, color: Color): Model => {
     const radians = (Math.PI * angle) / 180
     const begin = {
         x: 0,

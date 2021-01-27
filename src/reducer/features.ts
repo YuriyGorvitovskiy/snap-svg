@@ -1,8 +1,9 @@
-import ReduxToolkit from "@reduxjs/toolkit"
+import * as ReduxToolkit from "@reduxjs/toolkit"
 import * as Action from "./actions"
 import * as Model from "./model"
 import State from "./state"
 import * as Track from "./track"
+import { place } from "../data/item/track"
 
 const addTrack = (state: State, action: Action.AddTrack): State => {
     const model = Model.adapter.getSelectors().selectById(state.models, action.payload.modelId)
@@ -11,7 +12,7 @@ const addTrack = (state: State, action: Action.AddTrack): State => {
         tracks: Track.adapter.addOne(state.tracks, {
             id: action.payload.id,
             modelId: model.id,
-            ...Track.place(null, model, action.payload.placement),
+            ...place(null, model, action.payload.placement),
         }),
     }
 }
@@ -23,7 +24,7 @@ const moveTrack = (state: State, action: Action.MoveTrack): State => {
         ...state,
         tracks: Track.adapter.updateOne(state.tracks, {
             id: action.payload.id,
-            changes: Track.place(track, model, action.payload.placement),
+            changes: place(track, model, action.payload.placement),
         }),
     }
 }

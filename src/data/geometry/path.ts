@@ -1,10 +1,10 @@
-import { Metre, Point } from "./type"
+import { Meter, Point } from "./type"
 
 export interface Element {
     svg: string
 }
 
-export const arcTo = (radius: Metre, clockwise: boolean, to: Point): Element => {
+export const arcTo = (radius: Meter, clockwise: boolean, to: Point): Element => {
     return { svg: "A " + radius + "," + radius + (clockwise ? " 0,0,1 " : " 0,0,0 ") + to.x + "," + to.y }
 }
 

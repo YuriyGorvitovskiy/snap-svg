@@ -9,7 +9,7 @@ module.exports = {
     devtool: "source-map",
     output: {
         filename: "snap-svg-bundle.js",
-        path: __dirname + destDir,
+        path: path.resolve(__dirname, destDir),
     },
 
     resolve: {
@@ -43,7 +43,13 @@ module.exports = {
 
     plugins: [
         new CopyPlugin({
-            patterns: [{ from: "src/*.html", to: destDir }],
+            patterns: [
+                {
+                    from: "src/*.html",
+                    to: "[name].[ext]",
+                    toType: "template",
+                },
+            ],
         }),
     ],
 }

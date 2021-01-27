@@ -1,10 +1,10 @@
-export type Metre = number
+export type Meter = number
 export type Degree = number
 export type Color = string
 
 export interface Point {
-    x: Metre
-    y: Metre
+    x: Meter
+    y: Meter
 }
 
 export interface Placement {
