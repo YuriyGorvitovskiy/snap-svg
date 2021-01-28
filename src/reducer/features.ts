@@ -17,16 +17,14 @@ const addTrack = (state: State, action: Action.AddTrack): State => {
     }
 }
 
-const moveTrack = (state: State, action: Action.MoveTrack): State => {
+const moveTrack = (state: State, action: Action.MoveTrack): void => {
     const track = Track.adapter.getSelectors().selectById(state.tracks, action.payload.id)
     const model = Model.adapter.getSelectors().selectById(state.models, track.modelId)
-    return {
-        ...state,
-        tracks: Track.adapter.updateOne(state.tracks, {
-            id: action.payload.id,
-            changes: place(track, model, action.payload.placement),
-        }),
-    }
+
+    state.tracks = Track.adapter.updateOne(state.tracks, {
+        id: action.payload.id,
+        changes: place(track, model, action.payload.placement),
+    })
 }
 
 const featuresReducer = ReduxToolkit.createReducer(

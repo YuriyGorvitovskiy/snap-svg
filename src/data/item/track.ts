@@ -1,4 +1,4 @@
-import { Placement } from "../geometry/type"
+import { Placement, point } from "../geometry/type"
 import Model, { curveR5, straight480 } from "../model/track"
 import Joint from "./joint"
 
@@ -7,10 +7,9 @@ export default interface Track {
     readonly modelId: string
     readonly placement: Placement
     readonly joints: Joint[]
-    readonly matrix: DOMMatrixReadOnly
 }
 
-type PlaceReturn = Pick<Track, "placement" | "joints" | "matrix">
+type PlaceReturn = Pick<Track, "placement" | "joints">
 
 export const place = (track: Track, model: Model, placement: Placement): PlaceReturn => {
     const matrix = new DOMMatrixReadOnly()
@@ -22,12 +21,11 @@ export const place = (track: Track, model: Model, placement: Placement): PlaceRe
         placement,
         joints: model.joints.map((joint, index) => ({
             placement: {
-                pos: matrix.transformPoint(joint.pos),
+                pos: point(matrix.transformPoint(joint.pos)),
                 dir: (placement.dir + joint.dir) % 360,
             },
             to: track?.joints[index].to,
         })),
-        matrix,
     }
 }
 
