@@ -29,6 +29,36 @@ export const place = (track: Track, model: Model, placement: Placement): PlaceRe
     }
 }
 
+export const snap = (tracks: Track[], item: Track, model: Model, maxSnapDist: number): Placement => {
+    return tracks
+        .filter((t) => t.id != item.id)
+        .flatMap((t) => t.joints)
+        .reduce(
+            (a, c) =>
+                item.joints.reduce((ia, ic, ix) => {
+                    const dx = c.placement.pos.x - ic.placement.pos.x
+                    const dy = c.placement.pos.y - ic.placement.pos.y
+                    const d = dx * dx + dy * dy
+                    return d < ia.d
+                        ? {
+                              d,
+                              p: {
+                                  pos: point(
+                                      new DOMMatrixReadOnly()
+                                          .translate(c.placement.pos.x, c.placement.pos.y)
+                                          .rotate(0, 0, (180 + c.placement.dir - model.joints[ix].dir) % 360)
+                                          .translate(-model.joints[ix].pos.x, -model.joints[ix].pos.y)
+                                          .transformPoint(model.centerPoint)
+                                  ),
+                                  dir: (180 + c.placement.dir - model.joints[ix].dir) % 360,
+                              },
+                          }
+                        : ia
+                }, a),
+            { d: maxSnapDist * maxSnapDist, p: item.placement }
+        ).p
+}
+
 export const s1: Track = {
     id: "s1",
     modelId: straight480.id,

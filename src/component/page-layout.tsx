@@ -2,6 +2,7 @@ import Grid from "@material-ui/core/Grid"
 import { makeStyles } from "@material-ui/core/styles"
 import React, { FunctionComponent } from "react"
 import LayoutComponent from "./layout"
+// import SvgView from "./svg-view"
 
 const useStyles = makeStyles(() => ({
     root: {

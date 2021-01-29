@@ -1,13 +1,12 @@
 import { makeStyles } from "@material-ui/core/styles"
 import React from "react"
 import * as ReactRedux from "react-redux"
-import * as Path from "../data/geometry/path"
-import { Point, add, inverse } from "../data/geometry/type"
-import Track, { place } from "../data/item/track"
+import { add, inverse, Point } from "../data/geometry/type"
+import Track, { place, snap } from "../data/item/track"
 import Model from "../data/model/track"
 import { moveTrack } from "../reducer/actions"
-import * as ModelSlice from "../reducer/model"
 import State from "../reducer/state"
+import TrackComponent from "./track"
 import * as TrackSlice from "../reducer/track"
 
 const useStyles = makeStyles(() => ({
@@ -16,28 +15,6 @@ const useStyles = makeStyles(() => ({
         height: "100%",
     },
 }))
-interface Props {
-    track: Track
-
-    onMouseDown?: (track: Track, model: Model, ev: React.MouseEvent) => void
-}
-
-const TrackComponent: React.FunctionComponent<Props> = ({ track, onMouseDown }: Props) => {
-    const model = ReactRedux.useSelector((s: State) =>
-        ModelSlice.adapter.getSelectors().selectById(s.models, track.modelId)
-    )
-    const transform =
-        `translate(${track.placement.pos.x}, ${track.placement.pos.y}) ` +
-        `rotate(${track.placement.dir}) ` +
-        `translate(${-model.centerPoint.x}, ${-model.centerPoint.y})`
-
-    return (
-        <g transform={transform} onMouseDown={(ev) => onMouseDown(track, model, ev)}>
-            <path d={Path.toSVG(model.outLine)} fill={model.color} strokeWidth={0.25} stroke="black" />
-            <path d={Path.toSVG(model.centerLine)} fill="none" strokeWidth={0.25} stroke="black" />
-        </g>
-    )
-}
 
 interface Drag {
     track: Track
@@ -62,6 +39,9 @@ const LayoutComponent: React.FunctionComponent<unknown> = () => {
     }
 
     const onMouseDown = (track: Track, model: Model, ev: React.MouseEvent) => {
+        ev.preventDefault()
+        svgRef.current.focus()
+
         const svgPt = toSvgPoint(ev)
         setDrag({
             track: track,
@@ -77,10 +57,9 @@ const LayoutComponent: React.FunctionComponent<unknown> = () => {
         const svgPt = toSvgPoint(ev)
         const pos = add(svgPt, drag.adjust)
 
-        const placement = place(drag.track, drag.model, { ...drag.track.placement, pos })
-
-        //const snapPt = snap(layout, drag.itemId, item)
-        //placement = place(drag.track, drag.model, snapPt)
+        const track = { ...drag.track, ...place(drag.track, drag.model, { ...drag.track.placement, pos }) }
+        const snapPt = snap(tracks, track, drag.model, 5)
+        const placement = place(drag.track, drag.model, snapPt)
 
         setDrag({
             ...drag,
@@ -95,9 +74,9 @@ const LayoutComponent: React.FunctionComponent<unknown> = () => {
         const svgPt = toSvgPoint(ev)
         const pos = add(svgPt, drag.adjust)
 
-        const placement = place(drag.track, drag.model, { ...drag.track.placement, pos })
-        // const snapPt = snap(layout, drag.itemId, item)
-        // placement = place(drag.track, drag.model, snapPt.position, snapPt.direction)
+        const track = { ...drag.track, ...place(drag.track, drag.model, { ...drag.track.placement, pos }) }
+        const snapPt = snap(tracks, track, drag.model, 5)
+        const placement = place(drag.track, drag.model, snapPt)
 
         dispatch(moveTrack(drag.track.id, placement.placement))
         setDrag(null)
