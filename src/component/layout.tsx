@@ -11,6 +11,7 @@ import * as TrackSlice from "../reducer/track"
 
 const useStyles = makeStyles(() => ({
     root: {
+        flex: 1,
         width: "100%",
         height: "100%",
     },

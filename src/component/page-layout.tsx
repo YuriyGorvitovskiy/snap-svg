@@ -1,38 +1,38 @@
 import Grid from "@material-ui/core/Grid"
 import { makeStyles } from "@material-ui/core/styles"
-import React, { FunctionComponent } from "react"
+import Divider from "@material-ui/core/Divider"
+import React from "react"
+import Drawer from "./Drawer"
+import Footbar from "./footbar"
 import LayoutComponent from "./layout"
-// import SvgView from "./svg-view"
+import Toolbar from "./toolbar"
 
 const useStyles = makeStyles(() => ({
-    root: {
-        flexDirection: "column",
-        height: "100%",
-        left: 0,
-        position: "absolute",
-        top: 0,
-        width: "100%",
-    },
     main: {
         flex: "1",
-        height: "100%",
+        position: "absolute",
+        top: "48px",
+        bottom: "20px",
+        width: "100%",
         minWidth: 0,
+        flexDirection: "row",
+        flexWrap: "nowrap",
     },
 }))
 
-const PageLayout: FunctionComponent<unknown> = () => {
+const PageLayout: React.FunctionComponent<unknown> = () => {
     const classes = useStyles()
 
     return (
-        <Grid container className={classes.root}>
-            <Grid item>
-                <h1>Hello, SVG!</h1>
-            </Grid>
-            <Grid item className={classes.main}>
-                {/*<SvgView />*/}
+        <React.Fragment>
+            <Toolbar />
+            <Grid container className={classes.main}>
+                <Grid item style={{ width: "240px", height: "100%" }} />
+                <Divider orientation="vertical" flexItem />
                 <LayoutComponent />
             </Grid>
-        </Grid>
+            <Footbar />
+        </React.Fragment>
     )
 }
 
