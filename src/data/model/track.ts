@@ -8,6 +8,7 @@ export default interface Track {
     readonly outLine: Path.Path
     readonly color: Color
     readonly joints: Placement[]
+    readonly size: Point
 }
 
 export const straight = (id: string, length: Meter, width: Meter, color: Color): Track => {
@@ -33,6 +34,7 @@ export const straight = (id: string, length: Meter, width: Meter, color: Color):
             Path.lineTo({ x: -length / 2, y: -width / 2 }),
             Path.close(),
         ],
+        size: { x: length, y: width },
     }
 }
 
@@ -48,12 +50,17 @@ export const curve = (id: string, radius: Meter, angle: Degree, width: Meter, co
         y: (Math.cos(radians) - 1) * radius,
     }
 
+    const size = {
+        x: Math.sin(radians) * (radius + width / 2),
+        y: (1 - Math.cos(radians)) * (radius - width / 2) + width / 2,
+    }
+
     return {
         id,
         centerLine: [Path.moveTo(begin), Path.arcTo(radius, angle < 0, end)],
         centerPoint: {
-            x: Math.sin(radians / 2) * radius,
-            y: (Math.cos(radians / 2) - 1) * radius,
+            x: size.x / 2,
+            y: -size.y / 2,
         },
         color,
         joints: [
@@ -82,9 +89,18 @@ export const curve = (id: string, radius: Meter, angle: Degree, width: Meter, co
             }),
             Path.close(),
         ],
+        size,
     }
 }
 
 export const straight480 = straight("S480", 48, 9, "orange")
 
-export const curveR5 = curve("R5", 120, 22.5, 9, "#1F45FC")
+export const straight320 = straight("S320", 32, 9, "orange")
+
+export const straight280 = straight("S280", 28, 9, "orange")
+
+export const curveR5 = curve("R5", 124, 22.5, 9, "#1F45FC")
+
+export const curveR3 = curve("R3", 92, 30, 9, "#1F45FC")
+
+export const curveR1 = curve("R1", 60, 30, 9, "#1F45FC")
