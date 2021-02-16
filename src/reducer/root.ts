@@ -3,10 +3,12 @@ import reduceReducers from "reduce-reducers"
 import * as Redux from "redux"
 import featuresReducer from "./features"
 import * as Model from "./model"
+import * as Selection from "./selection"
 import * as Track from "./track"
 
 const combinedReducer = Redux.combineReducers({
     models: Model.slice.reducer,
+    selection: Selection.slice.reducer,
     tracks: Track.slice.reducer,
 })
 

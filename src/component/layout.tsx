@@ -4,10 +4,11 @@ import * as ReactRedux from "react-redux"
 import { add, inverse, Point } from "../data/geometry/type"
 import Track, { place, snap } from "../data/item/track"
 import Model from "../data/model/track"
-import { moveTrack } from "../reducer/actions"
+import { addTrack, moveTrack, selectLayoutItem } from "../reducer/actions"
 import State from "../reducer/state"
-import TrackComponent from "./track"
 import * as TrackSlice from "../reducer/track"
+import * as ModelSlice from "../reducer/model"
+import TrackComponent from "./track"
 
 const useStyles = makeStyles(() => ({
     root: {
@@ -16,6 +17,8 @@ const useStyles = makeStyles(() => ({
         height: "100%",
     },
 }))
+
+const NEW_ITEM = "new-item"
 
 interface Drag {
     track: Track
@@ -26,6 +29,10 @@ interface Drag {
 const LayoutComponent: React.FunctionComponent<unknown> = () => {
     const classes = useStyles()
     const tracks = ReactRedux.useSelector((s: State) => TrackSlice.adapter.getSelectors().selectAll(s.tracks))
+    const selection = ReactRedux.useSelector((s: State) => s.selection)
+    const selectedModel = ReactRedux.useSelector((s: State) =>
+        ModelSlice.adapter.getSelectors().selectById(s.models, selection.libraryModelId)
+    )
     const dispatch = ReactRedux.useDispatch()
     const [drag, setDrag] = React.useState(null as Drag)
 
@@ -39,15 +46,37 @@ const LayoutComponent: React.FunctionComponent<unknown> = () => {
         return htmlPt.matrixTransform(svg.getScreenCTM().flipY().inverse())
     }
 
-    const onMouseDown = (track: Track, model: Model, ev: React.MouseEvent) => {
+    const onMouseDownTrack = (track: Track, model: Model, ev: React.MouseEvent) => {
         ev.preventDefault()
+        ev.stopPropagation()
         svgRef.current.focus()
+
+        dispatch(selectLayoutItem(track.id))
 
         const svgPt = toSvgPoint(ev)
         setDrag({
             track: track,
             model: model,
             adjust: add(track.placement.pos, inverse(svgPt)),
+        })
+    }
+
+    const onMouseDownLayout = (ev: React.MouseEvent) => {
+        ev.preventDefault()
+        svgRef.current.focus()
+        if (null == selectedModel || null != drag) {
+            return
+        }
+
+        const svgPt = toSvgPoint(ev)
+        setDrag({
+            track: {
+                id: NEW_ITEM,
+                modelId: selectedModel.id,
+                ...place(null, selectedModel, { pos: svgPt, dir: 0 }),
+            },
+            model: selectedModel,
+            adjust: { x: 0, y: 0 },
         })
     }
 
@@ -78,8 +107,11 @@ const LayoutComponent: React.FunctionComponent<unknown> = () => {
         const track = { ...drag.track, ...place(drag.track, drag.model, { ...drag.track.placement, pos }) }
         const snapPt = snap(tracks, track, drag.model, 5)
         const placement = place(drag.track, drag.model, snapPt)
-
-        dispatch(moveTrack(drag.track.id, placement.placement))
+        if (NEW_ITEM === track.id) {
+            dispatch(addTrack(drag.track.modelId, placement.placement))
+        } else {
+            dispatch(moveTrack(drag.track.id, placement.placement))
+        }
         setDrag(null)
     }
 
@@ -106,6 +138,7 @@ const LayoutComponent: React.FunctionComponent<unknown> = () => {
             tabIndex={0}
             className={classes.root}
             viewBox="-100 -100 200 200"
+            onMouseDown={onMouseDownLayout}
             onMouseMove={onMouseMove}
             onMouseUp={onMouseUp}
             onKeyDown={onKeyDown}
@@ -114,9 +147,20 @@ const LayoutComponent: React.FunctionComponent<unknown> = () => {
                 {tracks
                     .filter((t) => t.id !== drag?.track?.id)
                     .map((t) => (
-                        <TrackComponent key={t.id} track={t} onMouseDown={onMouseDown} />
+                        <TrackComponent
+                            key={t.id}
+                            track={t}
+                            selected={selection.layoutTrackId === t.id}
+                            onMouseDown={onMouseDownTrack}
+                        />
                     ))}
-                {drag ? <TrackComponent key={drag.track.id} track={drag.track} /> : null}
+                {drag ? (
+                    <TrackComponent
+                        key={drag.track.id}
+                        track={drag.track}
+                        selected={selection.layoutTrackId === drag.track.id}
+                    />
+                ) : null}
             </g>
         </svg>
     )

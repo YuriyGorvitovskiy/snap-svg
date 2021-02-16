@@ -38,3 +38,35 @@ export const moveTrack = (id: string, placement: Placement): MoveTrack => {
         },
     }
 }
+
+export interface SelectLibraryItem {
+    type: "selection/SelectLibraryItem"
+    payload: {
+        modelId: string
+    }
+}
+
+export const selectLibraryItem = (modelId: string): SelectLibraryItem => {
+    return {
+        type: "selection/SelectLibraryItem",
+        payload: {
+            modelId,
+        },
+    }
+}
+
+export interface SelectLayoutItem {
+    type: "selection/SelectLayoutItem"
+    payload: {
+        trackId: string
+    }
+}
+
+export const selectLayoutItem = (trackId: string): SelectLayoutItem => {
+    return {
+        type: "selection/SelectLayoutItem",
+        payload: {
+            trackId,
+        },
+    }
+}

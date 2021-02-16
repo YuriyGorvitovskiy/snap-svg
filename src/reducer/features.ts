@@ -5,16 +5,13 @@ import State from "./state"
 import * as Track from "./track"
 import { place } from "../data/item/track"
 
-const addTrack = (state: State, action: Action.AddTrack): State => {
+const addTrack = (state: State, action: Action.AddTrack): void => {
     const model = Model.adapter.getSelectors().selectById(state.models, action.payload.modelId)
-    return {
-        ...state,
-        tracks: Track.adapter.addOne(state.tracks, {
-            id: action.payload.id,
-            modelId: model.id,
-            ...place(null, model, action.payload.placement),
-        }),
-    }
+    state.tracks = Track.adapter.addOne(state.tracks, {
+        id: action.payload.id,
+        modelId: model.id,
+        ...place(null, model, action.payload.placement),
+    })
 }
 
 const moveTrack = (state: State, action: Action.MoveTrack): void => {
