@@ -22,6 +22,16 @@ export const add = (pt: SVGPoint | DOMPoint | Point, vt: SVGPoint | DOMPoint | P
     y: pt.y + vt.y,
 })
 
+export const direction = (from: SVGPoint | DOMPoint | Point, to: SVGPoint | DOMPoint | Point): Point => ({
+    x: to.x - from.x,
+    y: to.y - from.y,
+})
+
+export const scale = (vt: SVGPoint | DOMPoint | Point, factor: number): Point => ({
+    x: vt.x * factor,
+    y: vt.y * factor,
+})
+
 export const inverse = (vt: SVGPoint | DOMPoint | Point): Point => ({
     x: -vt.x,
     y: -vt.y,

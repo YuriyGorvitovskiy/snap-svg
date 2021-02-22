@@ -1,5 +1,5 @@
 import { nanoid } from "@reduxjs/toolkit"
-import { Placement } from "../data/geometry/type"
+import { Placement, Point } from "../data/geometry/type"
 
 export interface AddTrack {
     type: "AddTrack"
@@ -40,7 +40,7 @@ export const moveTrack = (id: string, placement: Placement): MoveTrack => {
 }
 
 export interface SelectLibraryItem {
-    type: "selection/SelectLibraryItem"
+    type: "uistate/SelectLibraryItem"
     payload: {
         modelId: string
     }
@@ -48,7 +48,7 @@ export interface SelectLibraryItem {
 
 export const selectLibraryItem = (modelId: string): SelectLibraryItem => {
     return {
-        type: "selection/SelectLibraryItem",
+        type: "uistate/SelectLibraryItem",
         payload: {
             modelId,
         },
@@ -56,7 +56,7 @@ export const selectLibraryItem = (modelId: string): SelectLibraryItem => {
 }
 
 export interface SelectLayoutItem {
-    type: "selection/SelectLayoutItem"
+    type: "uistate/SelectLayoutItem"
     payload: {
         trackId: string
     }
@@ -64,9 +64,43 @@ export interface SelectLayoutItem {
 
 export const selectLayoutItem = (trackId: string): SelectLayoutItem => {
     return {
-        type: "selection/SelectLayoutItem",
+        type: "uistate/SelectLayoutItem",
         payload: {
             trackId,
+        },
+    }
+}
+
+export interface PanLayout {
+    type: "uistate/PanLayout"
+    payload: {
+        shift: Point
+    }
+}
+
+export const panLayout = (shift: Point): PanLayout => {
+    return {
+        type: "uistate/PanLayout",
+        payload: {
+            shift,
+        },
+    }
+}
+
+export interface ZoomLayout {
+    type: "uistate/ZoomLayout"
+    payload: {
+        center: Point
+        zoom: number
+    }
+}
+
+export const zoomLayout = (zoom: number, center: Point): ZoomLayout => {
+    return {
+        type: "uistate/ZoomLayout",
+        payload: {
+            center,
+            zoom,
         },
     }
 }

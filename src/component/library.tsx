@@ -16,7 +16,7 @@ const useStyles = makeStyles(() => ({
 const LibraryComponent: React.FunctionComponent<unknown> = () => {
     const classes = useStyles()
     const models = ReactRedux.useSelector((s: State) => ModelSlice.adapter.getSelectors().selectAll(s.models))
-    const selection = ReactRedux.useSelector((s: State) => s.selection)
+    const uistate = ReactRedux.useSelector((s: State) => s.uistate)
     const dispatch = ReactRedux.useDispatch()
 
     return (
@@ -25,7 +25,7 @@ const LibraryComponent: React.FunctionComponent<unknown> = () => {
                 <Item
                     key={m.id}
                     item={m}
-                    selected={selection.libraryModelId === m.id}
+                    selected={uistate.selection.libraryModelId === m.id}
                     onClick={() => dispatch(selectLibraryItem(m.id))}
                 >
                     {m.id}

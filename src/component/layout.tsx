@@ -1,10 +1,10 @@
 import { makeStyles } from "@material-ui/core/styles"
 import React from "react"
 import * as ReactRedux from "react-redux"
-import { add, inverse, Point } from "../data/geometry/type"
+import { add, direction, inverse, scale, Point } from "../data/geometry/type"
 import Track, { place, snap } from "../data/item/track"
 import Model from "../data/model/track"
-import { addTrack, moveTrack, selectLayoutItem } from "../reducer/actions"
+import { addTrack, moveTrack, selectLayoutItem, zoomLayout } from "../reducer/actions"
 import State from "../reducer/state"
 import * as TrackSlice from "../reducer/track"
 import * as ModelSlice from "../reducer/model"
@@ -29,14 +29,23 @@ interface Drag {
 const LayoutComponent: React.FunctionComponent<unknown> = () => {
     const classes = useStyles()
     const tracks = ReactRedux.useSelector((s: State) => TrackSlice.adapter.getSelectors().selectAll(s.tracks))
-    const selection = ReactRedux.useSelector((s: State) => s.selection)
+    const uistate = ReactRedux.useSelector((s: State) => s.uistate)
     const selectedModel = ReactRedux.useSelector((s: State) =>
-        ModelSlice.adapter.getSelectors().selectById(s.models, selection.libraryModelId)
+        ModelSlice.adapter.getSelectors().selectById(s.models, uistate.selection.libraryModelId)
     )
     const dispatch = ReactRedux.useDispatch()
     const [drag, setDrag] = React.useState(null as Drag)
 
     const svgRef: React.MutableRefObject<SVGSVGElement> = React.useRef()
+    const viewBox =
+        "" +
+        (uistate.layoutCenter.x - uistate.layoutZoom / 2) +
+        " " +
+        (-uistate.layoutCenter.y - uistate.layoutZoom / 2) +
+        " " +
+        uistate.layoutZoom +
+        " " +
+        uistate.layoutZoom
 
     const toSvgPoint = (ev: React.MouseEvent) => {
         const svg = svgRef.current
@@ -115,6 +124,16 @@ const LayoutComponent: React.FunctionComponent<unknown> = () => {
         setDrag(null)
     }
 
+    const onWheel = (ev: React.WheelEvent) => {
+        const delta = ev.detail || ev.deltaY || ev.deltaX
+        if (!delta) return
+
+        const svgPt = toSvgPoint(ev)
+        const factor = 1 + 0.001 * delta
+        const center = add(svgPt, scale(direction(svgPt, uistate.layoutCenter), factor))
+        dispatch(zoomLayout(uistate.layoutZoom * factor, center))
+    }
+
     const onKeyDown = (ev: React.KeyboardEvent) => {
         if (ev.key === "Escape" && drag) {
             ev.preventDefault()
@@ -137,11 +156,12 @@ const LayoutComponent: React.FunctionComponent<unknown> = () => {
             ref={svgRef}
             tabIndex={0}
             className={classes.root}
-            viewBox="-100 -100 200 200"
+            viewBox={viewBox}
             onMouseDown={onMouseDownLayout}
             onMouseMove={onMouseMove}
             onMouseUp={onMouseUp}
             onKeyDown={onKeyDown}
+            onWheel={onWheel}
         >
             <g transform="scale(1, -1)">
                 {tracks
@@ -150,7 +170,7 @@ const LayoutComponent: React.FunctionComponent<unknown> = () => {
                         <TrackComponent
                             key={t.id}
                             track={t}
-                            selected={selection.layoutTrackId === t.id}
+                            selected={uistate.selection.layoutTrackId === t.id}
                             onMouseDown={onMouseDownTrack}
                         />
                     ))}
@@ -158,7 +178,7 @@ const LayoutComponent: React.FunctionComponent<unknown> = () => {
                     <TrackComponent
                         key={drag.track.id}
                         track={drag.track}
-                        selected={selection.layoutTrackId === drag.track.id}
+                        selected={uistate.selection.layoutTrackId === drag.track.id}
                     />
                 ) : null}
             </g>
