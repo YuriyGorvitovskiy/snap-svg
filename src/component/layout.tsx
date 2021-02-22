@@ -1,10 +1,10 @@
 import { makeStyles } from "@material-ui/core/styles"
 import React from "react"
 import * as ReactRedux from "react-redux"
-import { add, direction, inverse, scale, Point } from "../data/geometry/type"
+import { add, direction, scale, Point, point } from "../data/geometry/type"
 import Track, { place, snap } from "../data/item/track"
 import Model from "../data/model/track"
-import { addTrack, moveTrack, selectLayoutItem, zoomLayout } from "../reducer/actions"
+import { addTrack, moveTrack, panLayout, selectLayoutItem, zoomLayout } from "../reducer/actions"
 import State from "../reducer/state"
 import * as TrackSlice from "../reducer/track"
 import * as ModelSlice from "../reducer/model"
@@ -26,6 +26,11 @@ interface Drag {
     adjust: Point
 }
 
+interface Pan {
+    start: Point
+    center: Point
+}
+
 const LayoutComponent: React.FunctionComponent<unknown> = () => {
     const classes = useStyles()
     const tracks = ReactRedux.useSelector((s: State) => TrackSlice.adapter.getSelectors().selectAll(s.tracks))
@@ -35,19 +40,20 @@ const LayoutComponent: React.FunctionComponent<unknown> = () => {
     )
     const dispatch = ReactRedux.useDispatch()
     const [drag, setDrag] = React.useState(null as Drag)
+    const [pan, setPan] = React.useState(null as Pan)
 
     const svgRef: React.MutableRefObject<SVGSVGElement> = React.useRef()
     const viewBox =
         "" +
-        (uistate.layoutCenter.x - uistate.layoutZoom / 2) +
+        ((pan?.center.x || uistate.layoutCenter.x) - uistate.layoutZoom / 2) +
         " " +
-        (-uistate.layoutCenter.y - uistate.layoutZoom / 2) +
+        (-(pan?.center.y || uistate.layoutCenter.y) - uistate.layoutZoom / 2) +
         " " +
         uistate.layoutZoom +
         " " +
         uistate.layoutZoom
 
-    const toSvgPoint = (ev: React.MouseEvent) => {
+    const toSvgPoint = (ev: React.MouseEvent): DOMPoint => {
         const svg = svgRef.current
         const htmlPt = svg.createSVGPoint()
         htmlPt.x = ev.clientX
@@ -55,73 +61,116 @@ const LayoutComponent: React.FunctionComponent<unknown> = () => {
         return htmlPt.matrixTransform(svg.getScreenCTM().flipY().inverse())
     }
 
+    const panCenter = (ev: React.MouseEvent): Point => {
+        const svg = svgRef.current
+        const transform = svg.getScreenCTM().flipY().inverse()
+        const htmlStart = svg.createSVGPoint()
+        htmlStart.x = pan.start.x
+        htmlStart.y = pan.start.y
+        const start = htmlStart.matrixTransform(transform)
+
+        const htmlCurrent = svg.createSVGPoint()
+        htmlCurrent.x = ev.clientX
+        htmlCurrent.y = ev.clientY
+        const current = htmlCurrent.matrixTransform(transform)
+
+        return add(uistate.layoutCenter, direction(current, start))
+    }
+
     const onMouseDownTrack = (track: Track, model: Model, ev: React.MouseEvent) => {
         ev.preventDefault()
         ev.stopPropagation()
         svgRef.current.focus()
+        if (drag || pan) return
 
-        dispatch(selectLayoutItem(track.id))
+        if (ev.shiftKey) {
+            setPan({
+                center: uistate.layoutCenter,
+                start: {
+                    x: ev.clientX,
+                    y: ev.clientY,
+                },
+            })
+        } else {
+            dispatch(selectLayoutItem(track.id))
 
-        const svgPt = toSvgPoint(ev)
-        setDrag({
-            track: track,
-            model: model,
-            adjust: add(track.placement.pos, inverse(svgPt)),
-        })
+            const svgPt = toSvgPoint(ev)
+            setDrag({
+                track: track,
+                model: model,
+                adjust: direction(svgPt, track.placement.pos),
+            })
+        }
     }
 
     const onMouseDownLayout = (ev: React.MouseEvent) => {
         ev.preventDefault()
         svgRef.current.focus()
-        if (null == selectedModel || null != drag) {
-            return
-        }
+        if (drag || pan) return
 
-        const svgPt = toSvgPoint(ev)
-        setDrag({
-            track: {
-                id: NEW_ITEM,
-                modelId: selectedModel.id,
-                ...place(null, selectedModel, { pos: svgPt, dir: 0 }),
-            },
-            model: selectedModel,
-            adjust: { x: 0, y: 0 },
-        })
+        if (ev.shiftKey) {
+            setPan({
+                center: uistate.layoutCenter,
+                start: {
+                    x: ev.clientX,
+                    y: ev.clientY,
+                },
+            })
+        } else if (selectedModel) {
+            const svgPt = toSvgPoint(ev)
+            setDrag({
+                track: {
+                    id: NEW_ITEM,
+                    modelId: selectedModel.id,
+                    ...place(null, selectedModel, { pos: svgPt, dir: 0 }),
+                },
+                model: selectedModel,
+                adjust: { x: 0, y: 0 },
+            })
+        }
     }
 
     const onMouseMove = (ev: React.MouseEvent) => {
-        if (!drag) return
-
         ev.preventDefault()
-        const svgPt = toSvgPoint(ev)
-        const pos = add(svgPt, drag.adjust)
+        if (pan) {
+            setPan({
+                ...pan,
+                center: panCenter(ev),
+            })
+        } else if (drag) {
+            const svgPt = toSvgPoint(ev)
+            const pos = add(svgPt, drag.adjust)
 
-        const track = { ...drag.track, ...place(drag.track, drag.model, { ...drag.track.placement, pos }) }
-        const snapPt = snap(tracks, track, drag.model, 5)
-        const placement = place(drag.track, drag.model, snapPt)
+            const track = { ...drag.track, ...place(drag.track, drag.model, { ...drag.track.placement, pos }) }
+            const snapPt = snap(tracks, track, drag.model, 5)
+            const placement = place(drag.track, drag.model, snapPt)
 
-        setDrag({
-            ...drag,
-            track: { ...drag.track, ...placement },
-        })
+            setDrag({
+                ...drag,
+                track: { ...drag.track, ...placement },
+            })
+        }
     }
 
     const onMouseUp = (ev: React.MouseEvent) => {
-        if (!drag) return
-
         ev.preventDefault()
-        const svgPt = toSvgPoint(ev)
-        const pos = add(svgPt, drag.adjust)
+        if (pan) {
+            dispatch(panLayout(panCenter(ev)))
+            setPan(null)
+        } else if (drag) {
+            const svgPt = toSvgPoint(ev)
+            const pos = add(svgPt, drag.adjust)
 
-        const track = { ...drag.track, ...place(drag.track, drag.model, { ...drag.track.placement, pos }) }
-        const snapPt = snap(tracks, track, drag.model, 5)
-        const placement = place(drag.track, drag.model, snapPt)
-        if (NEW_ITEM === track.id) {
-            dispatch(addTrack(drag.track.modelId, placement.placement))
-        } else {
-            dispatch(moveTrack(drag.track.id, placement.placement))
+            const track = { ...drag.track, ...place(drag.track, drag.model, { ...drag.track.placement, pos }) }
+            const snapPt = snap(tracks, track, drag.model, 5)
+            const placement = place(drag.track, drag.model, snapPt)
+            if (NEW_ITEM === track.id) {
+                dispatch(addTrack(drag.track.modelId, placement.placement))
+            } else {
+                dispatch(moveTrack(drag.track.id, placement.placement))
+            }
+            setDrag(null)
         }
-        setDrag(null)
     }
 
     const onWheel = (ev: React.WheelEvent) => {

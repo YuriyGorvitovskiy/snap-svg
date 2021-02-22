@@ -39,7 +39,7 @@ export const slice = ReduxToolkit.createSlice({
         }),
         PanLayout: (s: State, a: PanLayout): State => ({
             ...s,
-            layoutCenter: add(s.layoutCenter, a.payload.shift),
+            layoutCenter: a.payload.center,
         }),
         ZoomLayout: (s: State, a: ZoomLayout): State => ({
             ...s,

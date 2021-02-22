@@ -74,15 +74,15 @@ export const selectLayoutItem = (trackId: string): SelectLayoutItem => {
 export interface PanLayout {
     type: "uistate/PanLayout"
     payload: {
-        shift: Point
+        center: Point
     }
 }
 
-export const panLayout = (shift: Point): PanLayout => {
+export const panLayout = (center: Point): PanLayout => {
     return {
         type: "uistate/PanLayout",
         payload: {
-            shift,
+            center,
         },
     }
 }
