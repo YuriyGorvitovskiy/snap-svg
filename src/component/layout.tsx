@@ -211,7 +211,7 @@ const LayoutComponent: React.FunctionComponent<unknown> = () => {
                 dispatch(moveTrack(selectedTrack.id, placement.placement))
             }
         }
-        if (ev.key === "f" || ev.key === "c") {
+        if (["f", "c"].includes(ev.key.toLowerCase())) {
             const completeArea = boundingBox(...tracks.flatMap((t) => [t.boundingBox.min, t.boundingBox.max]))
             const sz = size(completeArea)
             dispatch(zoomLayout(Math.max(sz.x, sz.y) * 1.1, center(completeArea)))
