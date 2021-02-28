@@ -7,6 +7,11 @@ export interface Point {
     y: Meter
 }
 
+export interface Rectangle {
+    min: Point
+    max: Point
+}
+
 export interface Placement {
     pos: Point
     dir: Degree
@@ -36,3 +41,21 @@ export const inverse = (vt: SVGPoint | DOMPoint | Point): Point => ({
     x: -vt.x,
     y: -vt.y,
 })
+
+export const boundingBox = (...points: (SVGPoint | DOMPoint | Point)[]): Rectangle => ({
+    min: {
+        x: Math.min(...points.map((c) => c.x)),
+        y: Math.min(...points.map((c) => c.y)),
+    },
+    max: {
+        x: Math.max(...points.map((c) => c.x)),
+        y: Math.max(...points.map((c) => c.y)),
+    },
+})
+
+export const center = (rect: Rectangle): Point => ({
+    x: (rect.min.x + rect.max.x) / 2,
+    y: (rect.min.y + rect.max.y) / 2,
+})
+
+export const size = (rect: Rectangle): Point => direction(rect.min, rect.max)

@@ -1,4 +1,4 @@
-import { Placement, point } from "../geometry/type"
+import { add, boundingBox, Placement, point, Rectangle, scale } from "../geometry/type"
 import Model, { curveR5, straight480 } from "../model/track"
 import Joint from "./joint"
 
@@ -7,15 +7,19 @@ export default interface Track {
     readonly modelId: string
     readonly placement: Placement
     readonly joints: Joint[]
+    readonly boundingBox: Rectangle
 }
 
-type PlaceReturn = Pick<Track, "placement" | "joints">
+type PlaceReturn = Pick<Track, "placement" | "joints" | "boundingBox">
 
 export const place = (track: Track, model: Model, placement: Placement): PlaceReturn => {
     const matrix = new DOMMatrixReadOnly()
         .translate(placement.pos.x, placement.pos.y)
         .rotate(0, 0, placement.dir)
         .translate(-model.centerPoint.x, -model.centerPoint.y)
+
+    const corner1 = matrix.transformPoint(add(model.centerPoint, scale(model.size, -0.5)))
+    const corner2 = matrix.transformPoint(add(model.centerPoint, scale(model.size, 0.5)))
 
     return {
         placement,
@@ -26,6 +30,7 @@ export const place = (track: Track, model: Model, placement: Placement): PlaceRe
             },
             to: track?.joints[index].to,
         })),
+        boundingBox: boundingBox(corner1, corner2),
     }
 }
 

@@ -1,13 +1,13 @@
 import { makeStyles } from "@material-ui/core/styles"
 import React from "react"
 import * as ReactRedux from "react-redux"
-import { add, direction, scale, Point, point } from "../data/geometry/type"
+import { add, boundingBox, center, direction, Point, scale, size } from "../data/geometry/type"
 import Track, { place, snap } from "../data/item/track"
 import Model from "../data/model/track"
 import { addTrack, moveTrack, panLayout, selectLayoutItem, zoomLayout } from "../reducer/actions"
+import * as ModelSlice from "../reducer/model"
 import State from "../reducer/state"
 import * as TrackSlice from "../reducer/track"
-import * as ModelSlice from "../reducer/model"
 import TrackComponent from "./track"
 
 const useStyles = makeStyles(() => ({
@@ -38,6 +38,13 @@ const LayoutComponent: React.FunctionComponent<unknown> = () => {
     const selectedModel = ReactRedux.useSelector((s: State) =>
         ModelSlice.adapter.getSelectors().selectById(s.models, uistate.selection.libraryModelId)
     )
+    const selectedTrack = ReactRedux.useSelector((s: State) =>
+        TrackSlice.adapter.getSelectors().selectById(s.tracks, uistate.selection.layoutTrackId)
+    )
+    const selectedTrackModel = ReactRedux.useSelector((s: State) =>
+        ModelSlice.adapter.getSelectors().selectById(s.models, selectedTrack?.modelId)
+    )
+
     const dispatch = ReactRedux.useDispatch()
     const [drag, setDrag] = React.useState(null as Drag)
     const [pan, setPan] = React.useState(null as Pan)
@@ -188,15 +195,26 @@ const LayoutComponent: React.FunctionComponent<unknown> = () => {
             ev.preventDefault()
             setDrag(null)
         }
-        if (ev.key === "r" && drag) {
+        if (ev.key === "r" || ev.key === "R") {
             ev.preventDefault()
+            if (drag) {
+                const dir = drag.track.placement.dir + (ev.key === "R" ? -7.5 : 7.5)
+                const placement = place(drag.track, drag.model, { ...drag.track.placement, dir })
+                setDrag({
+                    ...drag,
+                    track: { ...drag.track, ...placement },
+                })
+            } else if (uistate.selection.layoutTrackId) {
+                const dir = selectedTrack.placement.dir + (ev.key === "R" ? -7.5 : 7.5)
+                const placement = place(selectedTrack, selectedTrackModel, { ...selectedTrack.placement, dir })
 
-            const dir = drag.track.placement.dir + 7.5
-            const placement = place(drag.track, drag.model, { ...drag.track.placement, dir })
-            setDrag({
-                ...drag,
-                track: { ...drag.track, ...placement },
-            })
+                dispatch(moveTrack(selectedTrack.id, placement.placement))
+            }
+        }
+        if (ev.key === "f" || ev.key === "c") {
+            const completeArea = boundingBox(...tracks.flatMap((t) => [t.boundingBox.min, t.boundingBox.max]))
+            const sz = size(completeArea)
+            dispatch(zoomLayout(Math.max(sz.x, sz.y) * 1.1, center(completeArea)))
         }
     }
 
