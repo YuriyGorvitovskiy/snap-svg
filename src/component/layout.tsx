@@ -150,11 +150,12 @@ const LayoutComponent: React.FunctionComponent<unknown> = () => {
 
             const track = { ...drag.track, ...place(drag.track, drag.model, { ...drag.track.placement, pos }) }
             const snapPt = snap(tracks, track, drag.model, 5)
-            const placement = place(drag.track, drag.model, snapPt)
+            const newPlace = place(drag.track, drag.model, snapPt)
 
             setDrag({
                 ...drag,
-                track: { ...drag.track, ...placement },
+                adjust: drag.track.placement.dir === snapPt.dir ? drag.adjust : direction(svgPt, snapPt.pos),
+                track: { ...drag.track, ...newPlace },
             })
         }
     }
@@ -195,7 +196,7 @@ const LayoutComponent: React.FunctionComponent<unknown> = () => {
             ev.preventDefault()
             setDrag(null)
         }
-        if (ev.key === "r" || ev.key === "R") {
+        if ("r" === ev.key.toLowerCase()) {
             ev.preventDefault()
             if (drag) {
                 const dir = drag.track.placement.dir + (ev.key === "R" ? -7.5 : 7.5)
