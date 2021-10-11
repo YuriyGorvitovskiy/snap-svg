@@ -35,6 +35,9 @@ export const place = (track: Track, model: Model, placement: Placement): PlaceRe
 }
 
 export const snap = (tracks: Track[], item: Track, model: Model, maxSnapDist: number): Placement => {
+    const maxD = maxSnapDist * maxSnapDist
+    const itemD =
+        (item.boundingBox.max.x * item.boundingBox.max.x + item.boundingBox.max.y * item.boundingBox.max.y) / 4
     return (
         tracks
             .filter((t) => t.id != item.id)
@@ -59,20 +62,24 @@ export const snap = (tracks: Track[], item: Track, model: Model, maxSnapDist: nu
                             ),
                             dir: (180 + c.placement.dir - model.joints[ix].dir) % 360,
                         }
+                        const pdx = p.pos.x - item.placement.pos.x
+                        const pdy = p.pos.y - item.placement.pos.y
+                        const pd = pdx * pdx + pdy * pdy
+                        if (pd > itemD) {
+                            return ia
+                        }
+
                         if (d < ia.d) {
                             return { d, p }
                         }
-                        const adx = ia.p.pos.x - item.placement.pos.x
-                        const ady = ia.p.pos.x - item.placement.pos.y
-                        const ad = adx * adx + ady * ady
 
-                        const pdx = p.pos.x - item.placement.pos.x
-                        const pdy = p.pos.x - item.placement.pos.y
-                        const pd = pdx * pdx + pdy * pdy
+                        const adx = ia.p.pos.x - item.placement.pos.x
+                        const ady = ia.p.pos.y - item.placement.pos.y
+                        const ad = adx * adx + ady * ady
 
                         return pd < ad ? { d, p } : ia
                     }, a),
-                { d: maxSnapDist * maxSnapDist, p: item.placement }
+                { d: maxD, p: item.placement }
             ).p
     )
 }
